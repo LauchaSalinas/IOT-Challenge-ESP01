@@ -1,15 +1,15 @@
 #include "Urbetrack.h"
 
 // Defined some default timeout variables for quick editing
-#define shortTimeout 200
-#define mediumTimeout 2000
-#define wifiTimeout 12000
+#define shortTimeout 800
+#define mediumTimeout 1500
+#define wifiTimeout 8000
 
 // Set baud rate for both devices (Arduino and ESP)
 #define baudrate 115200
 
-// 
-boolean _debug = true;
+//
+boolean _debug = false;
 
 ESP_Device::ESP_Device(int rxPin, int txPin)
   : mySerial(rxPin, txPin) {}
@@ -20,9 +20,9 @@ void ESP_Device::init()
   mySerial.begin(baudrate);
 }
 
-// Rest of the methods have a Serial.Print to acknowledge the result in the Serial COM. 
-// Since functions return a bool, code could be cleanerd and make a separate class for 
-// all the notification messages in a future revision. It has been done this way to 
+// Rest of the methods have a Serial.Print to acknowledge the result in the Serial COM.
+// Since functions return a bool, code could be cleanerd and make a separate class for
+// all the notification messages in a future revision. It has been done this way to
 // keep the main as simply as possible.
 
 bool ESP_Device::checkConnection()
@@ -42,14 +42,12 @@ bool ESP_Device::connectWifi(String ssid, String psw)
 
   if (response.indexOf("OK") > 0)
   {
-    int tries = 5;
 
     response = sendCommand("AT+CWJAP=\"" + ssid + "\",\"" + psw + "\"", wifiTimeout, _debug);
-    while (tries > 0 || response.indexOf("OK") <= 0)
+    while (response.indexOf("OK") <= 0)
     {
       byte b = 0;
       response = sendCommand("AT+CWJAP=\"" + ssid + "\",\"" + psw + "\"", wifiTimeout, _debug);
-      tries--;
     }
   }
   if (response.indexOf("OK") > 0)
@@ -64,24 +62,24 @@ bool ESP_Device::connectWifi(String ssid, String psw)
 
 bool ESP_Device::checkWifi() {
 
-  String response = sendCommand("AT+CWJAP", shortTimeout, _debug);
-  if (response.indexOf("OK") > 0){
-    Serial.println("WIFI CONNECTED");
+  String response = sendCommand("AT+CWJAP?", shortTimeout, _debug);
+  if (response.indexOf("OK") > 0) {
+    Serial.println("WIFI STATUS: CONNECTED");
     return true;
   }
   return false;
 
 }
 
-bool ESP_Device::disconnectWifi() 
+bool ESP_Device::disconnectWifi()
 {
   String response = sendCommand("AT+CWQAP", shortTimeout, _debug);
   if (response.indexOf("OK") > 0)
   {
-     Serial.println("WIFI DISCONNECTED");
-     return true;
+    Serial.println("WIFI DISCONNECTED");
+    return true;
   }
-  
+
   return false;
 }
 
@@ -90,17 +88,17 @@ bool ESP_Device::establishTCP(String ip, int port)
   String response = sendCommand("AT+CIPSTART=\"TCP\",\"" + ip + "\"," + port, mediumTimeout, _debug);
   if (response.indexOf("OK") > 0)
   {
-    Serial.println("TCP CONNECTION TO: " + ip + "WAS ESTABLISHED.");
+    Serial.println("TCP CONNECTION TO: " + ip + " WAS ESTABLISHED.");
     return true;
   }
   return false;
 }
 
-bool ESP_Device::sendTCP(String packet) 
+bool ESP_Device::sendTCP(String packet)
 {
-  int lenght = packet.length();
-  String response = sendCommand("AT+CIPSEND=" + lenght, mediumTimeout, _debug);
-  if (response.indexOf("OK") > 0)
+  int i = packet.length()+2;
+  String response = sendCommand("AT+CIPSEND=" + String(i), mediumTimeout, _debug);
+  if (response.indexOf(">") > 0)
   {
     response = sendCommand(packet, mediumTimeout, _debug);
   }
@@ -113,12 +111,12 @@ bool ESP_Device::sendTCP(String packet)
   return false;
 }
 
-bool ESP_Device::pingTCP(String ip) 
+bool ESP_Device::pingTCP(String ip)
 {
   String response = sendCommand("AT+PING=\"" + ip + "\"", mediumTimeout, _debug);
-  if (response.indexOf("OK") > 0)
+  if (response.indexOf("+") > 0)
   {
-    Serial.println("PING TO: " + ip + "REPLIED WITH SUCCES.");
+    Serial.println("PING TO: " + ip + " REPLIED WITH SUCCESS.");
     return true;
   }
   return false;
@@ -137,16 +135,16 @@ bool ESP_Device::closeTCP()
 
 String ESP_Device::sendCommand(String command, const int timeout, boolean debug)
 {
-  String response = "";
-  //mySerial.println(command); PROBAR ESTE NUEVO METODO de abajo
   int i = 0;
-  for (i = 0; command.length() - 1 > 0; i++)
+  for (i = 0; command.length() > i; i++)
   {
     byte b = command[i];
-    Serial.write(b);
-    delay(shortTimeout / 10);
+    mySerial.write(b);
+    delay(shortTimeout / 5);
   }
+  mySerial.println("");
 
+  String response = "";
   //while loop for timeout check
   long int time = millis();
   while ((time + timeout) > millis())
@@ -157,7 +155,7 @@ String ESP_Device::sendCommand(String command, const int timeout, boolean debug)
       response += c;
     }
   }
-  
+
   if (debug) Serial.print(response);
   return response;
 }
@@ -167,12 +165,11 @@ String ESP_Device::sendCommand(String command, const int timeout, boolean debug)
 // functions in void setup() were excecuted.
 void ESP_Device::serialWrite()
 {
-  String command = "";
-  while (Serial.available()) {
-    char c = Serial.read();
-    command += c;
+  while (Serial.available())
+  {
+    mySerial.write(Serial.read());
+    delay(shortTimeout / 5);
   }
-  mySerial.print(command);
 }
 
 String ESP_Device::serialRead(const int timeout, boolean debug)
