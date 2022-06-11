@@ -1,4 +1,4 @@
-# Urbetrack IOT
+# IOT Challenge
 ## A quick review of the challenge to watch!
 
 [![Click to watch a quick tour trough the project](/img/capYT.png?raw=true)](https://www.youtube.com/watch?v=GrVu_fzHyMw)
