@@ -9,13 +9,14 @@
 #define baudrate 115200
 
 //
-boolean _debug = false;
+boolean _debug = true;
 
 ESP_Device::ESP_Device(int rxPin, int txPin)
   : mySerial(rxPin, txPin) {}
 
 void ESP_Device::init()
 {
+  delay(shortTimeout);
   Serial.begin(baudrate);
   mySerial.begin(baudrate);
 }
@@ -42,11 +43,9 @@ bool ESP_Device::connectWifi(String ssid, String psw)
 
   if (response.indexOf("OK") > 0)
   {
-
     response = sendCommand("AT+CWJAP=\"" + ssid + "\",\"" + psw + "\"", wifiTimeout, _debug);
     while (response.indexOf("OK") <= 0)
     {
-      byte b = 0;
       response = sendCommand("AT+CWJAP=\"" + ssid + "\",\"" + psw + "\"", wifiTimeout, _debug);
     }
   }
@@ -96,7 +95,7 @@ bool ESP_Device::establishTCP(String ip, int port)
 
 bool ESP_Device::sendTCP(String packet)
 {
-  int i = packet.length()+2;
+  int i = packet.length() + 2;
   String response = sendCommand("AT+CIPSEND=" + String(i), mediumTimeout, _debug);
   if (response.indexOf(">") > 0)
   {
@@ -105,7 +104,7 @@ bool ESP_Device::sendTCP(String packet)
 
   if (response.indexOf("SEND OK") > 0)
   {
-    Serial.println("TCP PACKET SEND OK");
+    Serial.println("TCP PACKET WAS SENT OK");
     return true;
   }
   return false;
