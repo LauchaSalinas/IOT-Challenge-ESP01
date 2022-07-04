@@ -1,4 +1,4 @@
-#include "Urbetrack.h"
+#include "ESP01Basic.h"
 
 // Defined some default timeout variables for quick editing
 #define shortTimeout 800
@@ -132,7 +132,7 @@ bool ESP_Device::closeTCP()
   return false;
 }
 
-String ESP_Device::sendCommand(String command, const int timeout, boolean debug)
+String ESP_Device::sendCommand(String command, int timeout, boolean debug)
 {
   int i = 0;
   for (i = 0; command.length() > i; i++)
@@ -144,15 +144,11 @@ String ESP_Device::sendCommand(String command, const int timeout, boolean debug)
   mySerial.println("");
 
   String response = "";
-  //while loop for timeout check
-  long int time = millis();
-  while ((time + timeout) > millis())
+  delay(timeout);
+  while (mySerial.available())
   {
-    while (mySerial.available())
-    {
-      char c = mySerial.read();
-      response += c;
-    }
+    char c = mySerial.read();
+    response += c;
   }
 
   if (debug) Serial.print(response);
@@ -171,17 +167,15 @@ void ESP_Device::serialWrite()
   }
 }
 
-String ESP_Device::serialRead(const int timeout, boolean debug)
+String ESP_Device::serialRead(int timeout, boolean debug)
 {
   String response = "";
   long int time = millis();
-  while ((time + timeout) > millis())
+  delay(timeout);
+  while (mySerial.available())
   {
-    while (mySerial.available())
-    {
-      char c = mySerial.read();
-      response += c;
-    }
+    char c = mySerial.read();
+    response += c;
   }
 
   if (debug) Serial.print(response);

@@ -1,5 +1,5 @@
-#ifndef Urbetrack_H
-#define Urbetrack_H
+#ifndef ESP01Basic_H
+#define ESP01Basic_H
 
 #include <SoftwareSerial.h>
 #include <Arduino.h>
@@ -17,7 +17,7 @@ class ESP_Device {
     bool pingTCP(String);
     bool closeTCP();
     void serialWrite();
-    String serialRead(const int, boolean);
+    String serialRead(int, boolean);
 
 // In future revisions private variables as SSID and password
 // could be stored in flash memory trought EPROM Arduino
@@ -30,7 +30,7 @@ class ESP_Device {
     int _txPin;
     String _lastSSID;
     String _lastPSW;
-    String sendCommand(String, const int, boolean);
+    String sendCommand(String, int, boolean);
 };
 
 #endif

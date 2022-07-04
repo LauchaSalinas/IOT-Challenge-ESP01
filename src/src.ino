@@ -1,4 +1,4 @@
-#include "Urbetrack.h"
+#include "ESP01Basic.h"
 
 ESP_Device ESP01(4, 5);
 #define ssid "Upside24"
@@ -6,6 +6,8 @@ ESP_Device ESP01(4, 5);
 
 void setup() 
 {
+  // Every function here returns a boolean which can be used as needed, theres no use of it here.
+  // Consider this a list for 
   ESP01.init();
   ESP01.checkConnection();
   ESP01.connectWifi(ssid, psw);
